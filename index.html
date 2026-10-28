@@ -116,6 +116,17 @@
             color: #94a3b8;
         }
 
+        @media (max-width: 767px) {
+            #workspace { flex-direction: column; }
+            #sidebar {
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 48vh;
+                border-left: none;
+                border-top: 1px solid rgba(148, 163, 184, 0.35);
+            }
+        }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -125,133 +136,83 @@
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200 flex flex-col overflow-hidden">
 
     <!-- Header Navigation -->
-    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between shrink-0 shadow-sm flex-wrap gap-3">
-        <div class="flex items-center space-x-4">
-            <div class="bg-amber-500 text-white p-2 rounded-xl shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 py-2 sm:px-6 sm:py-3 shrink-0 shadow-sm flex flex-col gap-2">
+        <div class="flex items-center justify-between flex-wrap gap-x-4 gap-y-2">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="bg-amber-500 text-white p-2 rounded-xl shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h1 id="songTitle" class="text-lg font-bold tracking-tight truncate">Songbook Guitare</h1>
+                    <p id="songArtist" class="text-xs text-slate-500 dark:text-slate-400 truncate">Artiste inconnu</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg font-bold tracking-tight">Songbook Guitare</h1>
-                <!-- Bouton glissant B / H -->
-                <div class="flex items-center space-x-2 mt-1 select-none">
-                    <span class="text-xs text-slate-500">Notation :</span>
-                    <div class="inline-flex items-center bg-slate-100 dark:bg-slate-700 p-0.5 rounded-full text-xs font-bold cursor-pointer relative">
-                        <span id="labelB" onclick="selectNotation('en')" class="px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors">B</span>
-                        <span id="labelSi" onclick="selectNotation('fr')" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">Si</span>
-                        <span id="labelH" onclick="selectNotation('cz')" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">H</span>
-                        <div id="sliderThumb" class="absolute top-0.5 h-5 bg-white dark:bg-slate-600 rounded-full shadow-md transition-all duration-200" style="left: 2px; width: 24px;"></div>
-                    </div>
+            <!-- Notation glissante B / Si / H -->
+            <div class="flex items-center space-x-2 select-none">
+                <span class="text-xs text-slate-500">Notation :</span>
+                <div class="inline-flex items-center bg-slate-100 dark:bg-slate-700 p-0.5 rounded-full text-xs font-bold cursor-pointer relative">
+                    <span id="labelB" onclick="selectNotation('en')" class="px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors">B</span>
+                    <span id="labelSi" onclick="selectNotation('fr')" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">Si</span>
+                    <span id="labelH" onclick="selectNotation('cz')" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">H</span>
+                    <div id="sliderThumb" class="absolute top-0.5 h-5 bg-white dark:bg-slate-600 rounded-full shadow-md transition-all duration-200" style="left: 2px; width: 24px;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <button id="pickFolderBtn" class="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-                <span>Ouvrir dossier / fichiers .txt</span>
-            </button>
-            <button id="onlineFolderBtn" onclick="loadOnlineSongs()" class="flex items-center space-x-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold shadow-sm transition" title="Charger les chansons .txt du dossier de cette page (via index.json, ou automatiquement sur GitHub Pages)">
+        <!-- Contrôles de lecture (remontés en haut, compacts pour petits écrans) -->
+        <div class="flex items-center flex-wrap gap-2">
+            <select id="songSelect" onchange="selectSong(this.value)" class="hidden max-w-[14rem] text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer" title="Choisir une chanson"></select>
+
+            <button id="saveBtn" onclick="saveCurrentSong()" class="hidden items-center justify-center p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm transition" title="Enregistrer le texte modifié">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                <span>Ouvrir dossier en ligne</span>
-            </button>
-            <input type="file" id="fallbackFileInput" multiple accept=".txt" class="hidden">
-        </div>
-
-        <div class="flex items-center space-x-2">
-            <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-semibold transition" title="Masquer/Afficher le panneau des accords">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span id="sidebarBtnText">Masquer accords</span>
             </button>
 
-            <button id="themeToggle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Changer de thème">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden dark:block text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl" title="Transposer (demi-tons)">
+                <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">#/b</span>
+                <button onclick="transpose(-1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">-</button>
+                <span id="transpositionValue" class="text-xs font-mono font-bold w-6 text-center">0</span>
+                <button onclick="transpose(1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">+</button>
+            </div>
+
+            <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl" title="Taille du texte">
+                <button onclick="changeFontSize(-2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A-</button>
+                <button onclick="changeFontSize(2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A+</button>
+            </div>
+
+            <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 px-3 py-1.5 rounded-xl">
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Vitesse</span>
+                <input type="range" id="scrollSpeed" min="0.5" max="4" step="0.5" value="1" class="w-20 accent-amber-500 cursor-pointer">
+            </div>
+
+            <button id="scrollToggle" onclick="toggleAutoScroll()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                <svg id="scrollIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 block dark:hidden text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
+                <span id="scrollBtnText">Défilement</span>
             </button>
         </div>
     </header>
 
     <!-- Main Workspace Layout -->
-    <div class="flex-1 flex overflow-hidden">
-        
+    <div id="workspace" class="flex-1 flex overflow-hidden">
+
         <!-- Left Panel: Lyrics & Chords View -->
         <main id="mainContainer" class="flex-1 flex flex-col bg-white dark:bg-slate-800/50 relative border-r border-slate-200 dark:border-slate-700 transition-all duration-300">
-            
-            <!-- Toolbar -->
-            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-sm">
-                
-                <div class="flex flex-wrap items-center gap-4">
-                    <div>
-                        <h2 id="songTitle" class="font-bold text-base text-slate-900 dark:text-white">Sélectionnez une chanson</h2>
-                        <p id="songArtist" class="text-xs text-slate-500 dark:text-slate-400">Artiste inconnu</p>
-                    </div>
-
-                    <!-- Choix de la chanson (visible s'il y en a plusieurs) -->
-                    <select id="songSelect" onchange="selectSong(this.value)" class="hidden max-w-[14rem] text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer" title="Choisir une chanson"></select>
-
-                    <!-- Disquette : enregistrer le texte modifié -->
-                    <button id="saveBtn" onclick="saveCurrentSong()" class="hidden items-center justify-center p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm transition" title="Enregistrer le texte modifié">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                            <polyline points="17 21 17 13 7 13 7 21"/>
-                            <polyline points="7 3 7 8 15 8"/>
-                        </svg>
-                    </button>
-                    
-                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
-
-                    <!-- Transposition Control -->
-                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl">
-                        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">Transposer:</span>
-                        <button onclick="transpose(-1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">-</button>
-                        <span id="transpositionValue" class="text-xs font-mono font-bold w-6 text-center">0</span>
-                        <button onclick="transpose(1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">+</button>
-                    </div>
-
-                    <!-- Text Size Control -->
-                    <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl">
-                        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">Taille:</span>
-                        <button onclick="changeFontSize(-2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A-</button>
-                        <button onclick="changeFontSize(2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A+</button>
-                    </div>
-                </div>
-
-                <!-- Autoscroll Controls -->
-                <div class="flex items-center space-x-3">
-                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 px-3 py-1.5 rounded-xl">
-                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Vitesse:</span>
-                        <input type="range" id="scrollSpeed" min="0.5" max="4" step="0.5" value="1" class="w-20 accent-amber-500 cursor-pointer">
-                    </div>
-                    <button id="scrollToggle" onclick="toggleAutoScroll()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
-                        <svg id="scrollIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        </svg>
-                        <span id="scrollBtnText">Défilement</span>
-                    </button>
-                </div>
-
-            </div>
 
             <!-- Song Text Display Area -->
-            <div id="songContainer" class="flex-1 overflow-y-auto p-6 md:p-10 select-none">
+            <div id="songContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 select-none">
                 <div class="max-w-3xl mx-auto text-slate-400 dark:text-slate-500 text-center py-20">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                     <p class="text-lg font-semibold font-sans mb-1">Aucune chanson sélectionnée</p>
-                    <p class="text-sm font-sans">Cliquez sur <b>"Ouvrir dossier / fichiers .txt"</b> pour charger vos morceaux.</p>
+                    <p class="text-sm font-sans">Cliquez sur <b>"Ouvrir Dossier"</b> en bas pour charger vos morceaux.</p>
                 </div>
             </div>
 
@@ -259,23 +220,13 @@
 
         <!-- Right Panel: Dynamic Guitar Chord Fingerings -->
         <aside id="sidebar" style="width: 20rem; max-width: 70vw;" class="bg-white dark:bg-slate-800 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-700 shadow-lg transition-all duration-300">
-            <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <h3 class="font-bold text-sm tracking-tight flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <span>Diagrammes des accords</span>
-                </h3>
-                <span id="chordCount" class="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-            </div>
-            
-            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between">
+            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/80 flex items-center gap-2">
                 <div class="flex items-center space-x-1">
                     <button onclick="setChordColumns(1)" id="colBtn1" class="px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700">1</button>
                     <button onclick="setChordColumns(2)" id="colBtn2" class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white">2</button>
                     <button onclick="setChordColumns(3)" id="colBtn3" class="px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700">3</button>
                 </div>
-                <span class="text-xs text-slate-500">Colonnes :</span>
+                <span class="text-xs text-slate-500">Colonne(s)</span>
             </div>
             
             <div id="chordDiagramsContainer" class="flex-1 overflow-y-auto p-3 grid gap-3 justify-items-center content-start" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
@@ -286,6 +237,50 @@
         </aside>
 
     </div>
+
+    <!-- Zone du bas : chargement, panneau accords, thème (repliable) -->
+    <footer id="bottomBar" class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-3 py-2 sm:px-6 shrink-0 flex items-center flex-wrap gap-2 shadow-lg">
+        <button id="pickFolderBtn" class="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <span>Ouvrir Dossier</span>
+        </button>
+        <button id="onlineFolderBtn" onclick="loadOnlineSongs()" class="flex items-center space-x-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold shadow-sm transition" title="Charger les chansons .txt du dossier de cette page (via index.json, ou automatiquement sur GitHub Pages)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>
+            </svg>
+            <span>En ligne</span>
+        </button>
+        <input type="file" id="fallbackFileInput" multiple accept=".txt" class="hidden">
+
+        <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-semibold transition" title="Masquer/Afficher le panneau des accords">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span id="sidebarBtnText">Masquer accords</span>
+        </button>
+
+        <button id="themeToggle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Changer de thème">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden dark:block text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 block dark:hidden text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </footer>
+
+    <!-- Bouton flèche : replie/déplie la zone du bas (visible une fois une chanson chargée) -->
+    <button id="bottomBarToggle" onclick="toggleBottomBar()" class="hidden fixed bottom-3 right-3 z-50 p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg transition" title="Masquer les boutons du bas">
+        <svg id="chevronUp" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        </svg>
+        <svg id="chevronDown" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+    </button>
 
     <!-- Message Modal -->
     <div id="messageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -315,7 +310,6 @@
         const songArtistEl = document.getElementById('songArtist');
         const transValEl = document.getElementById('transpositionValue');
         const chordDiagramsContainer = document.getElementById('chordDiagramsContainer');
-        const chordCountEl = document.getElementById('chordCount');
         const scrollSpeedInput = document.getElementById('scrollSpeed');
         const scrollToggleBtn = document.getElementById('scrollToggle');
         const scrollBtnText = document.getElementById('scrollBtnText');
@@ -330,6 +324,10 @@
         const saveBtn = document.getElementById('saveBtn');
         const songSelect = document.getElementById('songSelect');
         const onlineFolderBtn = document.getElementById('onlineFolderBtn');
+        const bottomBar = document.getElementById('bottomBar');
+        const bottomBarToggle = document.getElementById('bottomBarToggle');
+        const chevronUp = document.getElementById('chevronUp');
+        const chevronDown = document.getElementById('chevronDown');
 
         function esc(s) {
             return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -845,7 +843,6 @@
         }
 
         function renderChordDiagrams(chords) {
-            chordCountEl.textContent = chords.length;
             if (chords.length === 0) {
                 chordDiagramsContainer.innerHTML = `<div class="text-center py-16 text-slate-400 text-xs" style="grid-column: 1 / -1;">Aucun accord détecté.</div>`;
                 return;
@@ -1063,6 +1060,15 @@
             }
         }
 
+        let bottomBarVisible = true;
+        function toggleBottomBar() {
+            bottomBarVisible = !bottomBarVisible;
+            bottomBar.classList.toggle('hidden', !bottomBarVisible);
+            chevronUp.classList.toggle('hidden', !bottomBarVisible);
+            chevronDown.classList.toggle('hidden', bottomBarVisible);
+            bottomBarToggle.title = bottomBarVisible ? "Masquer les boutons du bas" : "Afficher les boutons du bas";
+        }
+
         function setChordColumns(n) {
             chordColumns = n;
             for (let i = 1; i <= 3; i++) {
@@ -1097,6 +1103,7 @@
             transValEl.textContent = '0';
             songTitleEl.textContent = currentSong.title;
             songArtistEl.textContent = currentSong.artist;
+            bottomBarToggle.classList.remove('hidden');
 
             currentSong.notation = detectNotation(currentSong.content);
             setNotationSlider(currentSong.notation);

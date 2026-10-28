@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Songbook & Transpositeur Guitare</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .song-pre {
+            font-family: 'Fira Code', monospace;
+            white-space: pre;
+            word-wrap: normal;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+
+        .chord-interactive {
+            display: inline-block;
+            font-weight: 700;
+            color: #d97706;
+            background-color: rgba(254, 243, 199, 0.6);
+            padding: 0 0.2rem;
+            border-radius: 0.25rem;
+            position: relative;
+            cursor: pointer;
+            border-bottom: 2px solid #f59e0b;
+        }
+        .dark .chord-interactive {
+            color: #fbbf24;
+            background-color: rgba(120, 53, 15, 0.5);
+            border-bottom-color: #d97706;
+        }
+
+        .chord-tooltip {
+            visibility: hidden;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 20%;
+            transform: translateX(-15%);
+            background-color: white;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            width: 120px;
+        }
+        .chord-interactive.tooltip-below .chord-tooltip {
+            bottom: auto;
+            top: 135%;
+        }
+
+        .dark .chord-tooltip {
+            background-color: #1e293b;
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+        .chord-interactive:hover .chord-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .chord-card {
+            position: relative;
+        }
+        .variant-selector {
+            visibility: hidden;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .dark .variant-selector {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: #475569;
+        }
+        .chord-card:hover .variant-selector {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .section-header {
+            color: #64748b;
+            font-weight: 700;
+            font-style: italic;
+        }
+        .dark .section-header {
+            color: #94a3b8;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200 flex flex-col overflow-hidden">
+
+    <!-- Header Navigation -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between shrink-0 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center space-x-4">
+            <div class="bg-amber-500 text-white p-2 rounded-xl shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">Songbook Guitare</h1>
+                <!-- Bouton glissant B / H -->
+                <div class="flex items-center space-x-2 mt-1 select-none">
+                    <span class="text-xs text-slate-500">Notation Si :</span>
+                    <div class="inline-flex items-center bg-slate-100 dark:bg-slate-700 p-0.5 rounded-full text-xs font-bold cursor-pointer relative" onclick="toggleNotationMode()">
+                        <span id="labelB" class="px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors">B</span>
+                        <span id="labelH" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">H</span>
+                        <div id="sliderThumb" class="absolute top-0.5 left-0.5 w-6 h-5 bg-white dark:bg-slate-600 rounded-full shadow-md transition-transform duration-200"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="pickFolderBtn" class="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <span>Ouvrir dossier / fichiers .txt</span>
+            </button>
+            <button id="onlineFolderBtn" onclick="loadOnlineSongs()" class="flex items-center space-x-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold shadow-sm transition" title="Charger les chansons .txt du dossier de cette page (via index.json, ou automatiquement sur GitHub Pages)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>
+                </svg>
+                <span>Ouvrir dossier en ligne</span>
+            </button>
+            <input type="file" id="fallbackFileInput" multiple accept=".txt" class="hidden">
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-semibold transition" title="Masquer/Afficher le panneau des accords">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span id="sidebarBtnText">Masquer accords</span>
+            </button>
+
+            <button id="themeToggle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Changer de thème">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden dark:block text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 block dark:hidden text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Panel: Lyrics & Chords View -->
+        <main id="mainContainer" class="flex-1 flex flex-col bg-white dark:bg-slate-800/50 relative border-r border-slate-200 dark:border-slate-700 transition-all duration-300">
+            
+            <!-- Toolbar -->
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-sm">
+                
+                <div class="flex flex-wrap items-center gap-4">
+                    <div>
+                        <h2 id="songTitle" class="font-bold text-base text-slate-900 dark:text-white">Sélectionnez une chanson</h2>
+                        <p id="songArtist" class="text-xs text-slate-500 dark:text-slate-400">Artiste inconnu</p>
+                    </div>
+
+                    <!-- Choix de la chanson (visible s'il y en a plusieurs) -->
+                    <select id="songSelect" onchange="selectSong(this.value)" class="hidden max-w-[14rem] text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer" title="Choisir une chanson"></select>
+
+                    <!-- Disquette : enregistrer le texte modifié -->
+                    <button id="saveBtn" onclick="saveCurrentSong()" class="hidden items-center justify-center p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm transition" title="Enregistrer le texte modifié">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+
+                    <!-- Transposition Control -->
+                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl">
+                        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">Transposer:</span>
+                        <button onclick="transpose(-1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">-</button>
+                        <span id="transpositionValue" class="text-xs font-mono font-bold w-6 text-center">0</span>
+                        <button onclick="transpose(1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">+</button>
+                    </div>
+
+                    <!-- Text Size Control -->
+                    <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl">
+                        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">Taille:</span>
+                        <button onclick="changeFontSize(-2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A-</button>
+                        <button onclick="changeFontSize(2)" class="px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs font-bold shadow-sm">A+</button>
+                    </div>
+                </div>
+
+                <!-- Autoscroll Controls -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 px-3 py-1.5 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Vitesse:</span>
+                        <input type="range" id="scrollSpeed" min="0.5" max="4" step="0.5" value="1" class="w-20 accent-amber-500 cursor-pointer">
+                    </div>
+                    <button id="scrollToggle" onclick="toggleAutoScroll()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                        <svg id="scrollIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        </svg>
+                        <span id="scrollBtnText">Défilement</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Song Text Display Area -->
+            <div id="songContainer" class="flex-1 overflow-y-auto p-6 md:p-10 select-none">
+                <div class="max-w-3xl mx-auto text-slate-400 dark:text-slate-500 text-center py-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    <p class="text-lg font-semibold font-sans mb-1">Aucune chanson sélectionnée</p>
+                    <p class="text-sm font-sans">Cliquez sur <b>"Ouvrir dossier / fichiers .txt"</b> pour charger vos morceaux.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Right Panel: Dynamic Guitar Chord Fingerings -->
+        <aside id="sidebar" style="width: 20rem; max-width: 70vw;" class="bg-white dark:bg-slate-800 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-700 shadow-lg transition-all duration-300">
+            <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-sm tracking-tight flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>Diagrammes des accords</span>
+                </h3>
+                <span id="chordCount" class="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+            </div>
+            
+            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Colonnes :</span>
+                <div class="flex items-center space-x-1">
+                    <button onclick="setChordColumns(1)" id="colBtn1" class="px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700">1</button>
+                    <button onclick="setChordColumns(2)" id="colBtn2" class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white">2</button>
+                    <button onclick="setChordColumns(3)" id="colBtn3" class="px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700">3</button>
+                </div>
+            </div>
+            
+            <div id="chordDiagramsContainer" class="flex-1 overflow-y-auto p-3 grid gap-3 justify-items-center content-start" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <div class="text-center py-16 text-slate-400 dark:text-slate-500 text-xs" style="grid-column: 1 / -1;">
+                    Les diagrammes de guitare s'afficheront ici.
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 text-center">
+            <h3 id="modalTitle" class="font-bold text-lg mb-2">Information</h3>
+            <p id="modalMessage" class="text-sm text-slate-600 dark:text-slate-300 mb-6"></p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold text-sm transition">OK</button>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        let songsDatabase = [];
+        let currentSong = null;
+        let transpositionOffset = 0;
+        let currentFontSize = 16;
+        let isSidebarVisible = true;
+        let chordColumns = 2;
+        let isAutoScrolling = false;
+        let autoScrollInterval = null;
+        let czechNotationMode = false;
+
+        let chordVariantSelections = {};
+
+        const songContainer = document.getElementById('songContainer');
+        const songTitleEl = document.getElementById('songTitle');
+        const songArtistEl = document.getElementById('songArtist');
+        const transValEl = document.getElementById('transpositionValue');
+        const chordDiagramsContainer = document.getElementById('chordDiagramsContainer');
+        const chordCountEl = document.getElementById('chordCount');
+        const scrollSpeedInput = document.getElementById('scrollSpeed');
+        const scrollToggleBtn = document.getElementById('scrollToggle');
+        const scrollBtnText = document.getElementById('scrollBtnText');
+        const pickFolderBtn = document.getElementById('pickFolderBtn');
+        const fallbackFileInput = document.getElementById('fallbackFileInput');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBtnText = document.getElementById('sidebarBtnText');
+        const sliderThumb = document.getElementById('sliderThumb');
+        const labelB = document.getElementById('labelB');
+        const labelH = document.getElementById('labelH');
+        const saveBtn = document.getElementById('saveBtn');
+        const songSelect = document.getElementById('songSelect');
+        const onlineFolderBtn = document.getElementById('onlineFolderBtn');
+
+        function esc(s) {
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        const NOTE_EN = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+        const FR_MAP = { DO: 'C', RE: 'D', MI: 'E', FA: 'F', SOL: 'G', LA: 'A', SI: 'B' };
+        const SECTION_RE = /^\s*\[(Chorus|Verse|Intro|Outro|Bridge|Strophe|Refrain|Instrumental)\]/i;
+        const TAB_RE = /^\s*[eBGDAE]\|/;
+
+        const ROOT_PART = '(SOL|DO|RE|MI|FA|LA|SI|[A-H])([#b]?)';
+        const SUFFIX_PART = '((?:maj|min|dim|aug|sus[24]?|add[0-9]*|m|M|[0-9]{1,2}|[#b+\\-]|\\([^)]*\\))*)';
+        const CHORD_RE = new RegExp('^' + ROOT_PART + SUFFIX_PART + '(?:\\/' + ROOT_PART + ')?$');
+
+        function mod12(n) { return ((n % 12) + 12) % 12; }
+
+        function noteName(pc, czech) {
+            pc = mod12(pc);
+            if (czech) {
+                if (pc === 10) return 'B';
+                if (pc === 11) return 'H';
+            }
+            return NOTE_EN[pc];
+        }
+
+        function letterPc(letter, acc, czech) {
+            const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, H: 11 };
+            let pc;
+            if (letter === 'B') {
+                if (czech) {
+                    return acc === '#' ? 11 : 10;
+                }
+                pc = 11;
+            } else {
+                pc = base[letter];
+            }
+            if (acc === '#') pc += 1;
+            else if (acc === 'b') pc -= 1;
+            return mod12(pc);
+        }
+
+        function rootPc(letter, acc, czech) {
+            if (letter.length > 1) return letterPc(FR_MAP[letter], acc, false);
+            return letterPc(letter, acc, czech);
+        }
+
+        function parseChordToken(tok) {
+            let m = CHORD_RE.exec(tok);
+            let pre = '', post = '';
+            if (!m) {
+                const mm = /^([(\[|:]*)(.*?)([)\]|,.:;!*]*)$/.exec(tok);
+                if (mm && mm[2] && (mm[1] || mm[3])) {
+                    m = CHORD_RE.exec(mm[2]);
+                    pre = mm[1];
+                    post = mm[3];
+                }
+            }
+            if (!m) return null;
+            return { pre, post, rl: m[1], ra: m[2], suffix: m[3], bl: m[4] || null, ba: m[5] || '' };
+        }
+
+        function chordInfo(p, czech, offset) {
+            const fr = p.rl.length > 1 || (p.bl && p.bl.length > 1);
+            const root = mod12(rootPc(p.rl, p.ra, czech) + offset);
+            const bass = p.bl ? mod12(rootPc(p.bl, p.ba, czech) + offset) : null;
+            const key = noteName(root, false) + p.suffix + (bass !== null ? '/' + noteName(bass, false) : '');
+            let display;
+            if (offset === 0 && !fr) {
+                display = p.rl + p.ra + p.suffix + (p.bl ? '/' + p.bl + p.ba : '');
+            } else {
+                display = noteName(root, czech) + p.suffix + (bass !== null ? '/' + noteName(bass, czech) : '');
+            }
+            return { key, display };
+        }
+
+        function convertSyntax(p, fromCzech, toCzech) {
+            const conv = (l, a) => {
+                if (l.length > 1) return l + a;
+                if (l !== 'B' && l !== 'H') return l + a;
+                return noteName(letterPc(l, a, fromCzech), toCzech);
+            };
+            return conv(p.rl, p.ra) + p.suffix + (p.bl ? '/' + conv(p.bl, p.ba) : '');
+        }
+
+        function isChordLine(line) {
+            if (SECTION_RE.test(line)) return false;
+            if (TAB_RE.test(line)) return false;
+            const tokens = line.trim().split(/\s+/);
+            if (tokens.length === 0 || tokens[0] === '') return false;
+            let valid = 0, total = 0;
+            tokens.forEach(t => {
+                if (/^[|\-–—\/\\.:,;()*]+$/.test(t) || /^(x\d+|\d+x)$/i.test(t)) return;
+                total++;
+                if (parseChordToken(t)) valid++;
+            });
+            return valid > 0 && (valid / total) >= 0.5;
+        }
+
+        function mapChordLine(line, fn, escFn) {
+            const parts = line.split(/(\s+)/);
+            let lastIdx = parts.length - 1;
+            while (lastIdx >= 0 && parts[lastIdx] === '') lastIdx--;
+            let shift = 0;
+            let out = '';
+            parts.forEach((p, i) => {
+                if (p === '') return;
+                if (/^\s+$/.test(p)) {
+                    if (i === lastIdx) { out += p; return; }
+                    const newLen = Math.max(1, p.length - shift);
+                    shift += newLen - p.length;
+                    out += ' '.repeat(newLen);
+                    return;
+                }
+                const r = fn(p);
+                if (r) {
+                    shift += r.plain.length - p.length;
+                    out += r.html;
+                } else {
+                    out += escFn(p);
+                }
+            });
+            return out;
+        }
+
+        function mapBracketChords(line, fn, keepBrackets) {
+            let res = '', last = 0, m;
+            const re = /\[([^\]]+)\]/g;
+            while ((m = re.exec(line)) !== null) {
+                res += fn.text(line.slice(last, m.index));
+                const p = parseChordToken(m[1].trim());
+                res += p ? fn.chord(p, m[0]) : fn.text(m[0]);
+                last = re.lastIndex;
+            }
+            res += fn.text(line.slice(last));
+            return res;
+        }
+
+        function detectCzechNotation(content) {
+            let found = false;
+            content.split('\n').forEach(line => {
+                if (found || SECTION_RE.test(line) || TAB_RE.test(line)) return;
+                const check = p => { if (p && (p.rl === 'H' || p.bl === 'H')) found = true; };
+                if (isChordLine(line)) {
+                    line.trim().split(/\s+/).forEach(t => check(parseChordToken(t)));
+                } else {
+                    const re = /\[([^\]]+)\]/g; let m;
+                    while ((m = re.exec(line)) !== null) check(parseChordToken(m[1].trim()));
+                }
+            });
+            return found;
+        }
+
+        function extractAllChords(content, czech, offset) {
+            const seen = new Map();
+            const add = p => {
+                if (!p) return;
+                const info = chordInfo(p, czech, offset);
+                if (!seen.has(info.key)) seen.set(info.key, info);
+            };
+            content.split('\n').forEach(line => {
+                if (SECTION_RE.test(line) || TAB_RE.test(line)) return;
+                if (isChordLine(line)) {
+                    line.trim().split(/\s+/).forEach(t => add(parseChordToken(t)));
+                } else {
+                    const re = /\[([^\]]+)\]/g; let m;
+                    while ((m = re.exec(line)) !== null) add(parseChordToken(m[1].trim()));
+                }
+            });
+            return Array.from(seen.values());
+        }
+
+        function setNotationSlider(isH) {
+            czechNotationMode = isH;
+            if (isH) {
+                sliderThumb.style.transform = 'translateX(28px)';
+                labelH.className = 'px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors';
+                labelB.className = 'px-2.5 py-0.5 z-10 text-slate-500 transition-colors';
+            } else {
+                sliderThumb.style.transform = 'translateX(0px)';
+                labelB.className = 'px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors';
+                labelH.className = 'px-2.5 py-0.5 z-10 text-slate-500 transition-colors';
+            }
+        }
+
+        function toggleNotationMode() {
+            const target = !czechNotationMode;
+            if (currentSong) convertSongNotation(target);
+            else setNotationSlider(target);
+        }
+
+        function convertSongNotation(toCzech) {
+            if (!currentSong) return;
+            const fromCzech = currentSong.czech;
+            if (fromCzech !== toCzech) {
+                const convTok = tok => {
+                    const p = parseChordToken(tok);
+                    if (!p) return null;
+                    const s = p.pre + convertSyntax(p, fromCzech, toCzech) + p.post;
+                    return { plain: s, html: s };
+                };
+                const out = currentSong.content.split('\n').map(line => {
+                    if (SECTION_RE.test(line) || TAB_RE.test(line)) return line;
+                    if (isChordLine(line)) return mapChordLine(line, convTok, x => x);
+                    return mapBracketChords(line, {
+                        text: s => s,
+                        chord: (p, orig) => '[' + p.pre + convertSyntax(p, fromCzech, toCzech) + p.post + ']'
+                    });
+                });
+                currentSong.content = out.join('\n');
+                currentSong.czech = toCzech;
+            }
+            setNotationSlider(toCzech);
+            updateSaveButton();
+            renderSongContent();
+        }
+
+        function updateSaveButton() {
+            const dirty = currentSong && currentSong.content !== currentSong.savedContent;
+            saveBtn.classList.toggle('hidden', !dirty);
+            saveBtn.classList.toggle('flex', !!dirty);
+        }
+
+        function downloadSongText(song) {
+            const blob = new Blob([song.content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = song.filename || (song.title + '.txt');
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function writeToHandle(handle, text) {
+            if (handle.queryPermission) {
+                let perm = await handle.queryPermission({ mode: 'readwrite' });
+                if (perm !== 'granted' && handle.requestPermission) perm = await handle.requestPermission({ mode: 'readwrite' });
+                if (perm !== 'granted') throw new Error('Permission refusée');
+            }
+            const w = await handle.createWritable();
+            await w.write(text);
+            await w.close();
+        }
+
+        async function saveCurrentSong() {
+            if (!currentSong) return;
+            const song = currentSong;
+            let saved = false;
+            try {
+                if (song.fileHandle && song.fileHandle.createWritable) {
+                    await writeToHandle(song.fileHandle, song.content);
+                    saved = true;
+                } else if (window.showSaveFilePicker) {
+                    const h = await window.showSaveFilePicker({
+                        suggestedName: song.filename || (song.title + '.txt'),
+                        types: [{ description: 'Texte', accept: { 'text/plain': ['.txt'] } }]
+                    });
+                    await writeToHandle(h, song.content);
+                    song.fileHandle = h;
+                    saved = true;
+                }
+            } catch (err) {
+                if (err && err.name === 'AbortError') return;
+                saved = false;
+            }
+            if (!saved) {
+                downloadSongText(song);
+                saved = true;
+            }
+            if (saved) {
+                song.savedContent = song.content;
+                const dbSong = songsDatabase[song._dbIndex];
+                if (dbSong) { dbSong.content = song.content; dbSong.czech = song.czech; }
+                updateSaveButton();
+            }
+        }
+
+        const chordLibrary = {
+            "C": [
+                { name: "C (Ouvert)", frets: [-1, 3, 2, 0, 1, 0], fingers: [-1, 3, 2, 0, 1, 0], baseFret: 1 },
+                { name: "C (Barré A)", frets: [-1, 3, 5, 5, 5, 3], fingers: [-1, 1, 3, 3, 3, 1], baseFret: 3 }
+            ],
+            "C/B": [
+                { name: "C/B (Stricte)", frets: [-1, 2, 2, 0, 1, 0], fingers: [-1, 2, 3, 0, 1, 0], baseFret: 1 },
+                { name: "C/B (Folk x-2-0-0-1-0)", frets: [-1, 2, 0, 0, 1, 0], fingers: [-1, 2, 0, 0, 1, 0], baseFret: 1 }
+            ],
+            "C/D": [
+                { name: "C/D (Ouvert x-x-0-0-1-0)", frets: [-1, -1, 0, 0, 1, 0], fingers: [-1, -1, 0, 0, 1, 0], baseFret: 1 },
+                { name: "C/D (Complet x-x-0-5-5-3)", frets: [-1, -1, 0, 5, 5, 3], fingers: [-1, -1, 0, 3, 4, 1], baseFret: 3 }
+            ],
+            "A": [
+                { name: "A (Ouvert)", frets: [-1, 0, 2, 2, 2, 0], fingers: [-1, 0, 1, 2, 3, 0], baseFret: 1 }
+            ],
+            "Am": [
+                { name: "Am (Ouvert)", frets: [-1, 0, 2, 2, 1, 0], fingers: [-1, 0, 2, 3, 1, 0], baseFret: 1 },
+                { name: "Am (Barré E)", frets: [5, 7, 7, 5, 5, 5], fingers: [1, 3, 4, 1, 1, 1], baseFret: 5 }
+            ],
+            "Asus4": [
+                { name: "Asus4", frets: [-1, 0, 2, 2, 3, 0], fingers: [-1, 0, 1, 2, 3, 0], baseFret: 1 }
+            ],
+            "G": [
+                { name: "G (Ouvert)", frets: [3, 2, 0, 0, 3, 3], fingers: [2, 1, 0, 0, 3, 4], baseFret: 1 },
+                { name: "G (Barré E)", frets: [3, 5, 5, 4, 3, 3], fingers: [1, 3, 4, 2, 1, 1], baseFret: 3 }
+            ],
+            "D": [
+                { name: "D (Ouvert)", frets: [-1, -1, 0, 2, 3, 2], fingers: [-1, -1, 0, 1, 3, 2], baseFret: 1 }
+            ],
+            "Dm": [
+                { name: "Dm (Ouvert)", frets: [-1, -1, 0, 2, 3, 1], fingers: [-1, -1, 0, 2, 3, 1], baseFret: 1 }
+            ],
+            "Dsus2": [
+                { name: "Dsus2", frets: [-1, -1, 0, 2, 3, 0], fingers: [-1, -1, 0, 1, 2, 0], baseFret: 1 }
+            ],
+            "Dsus4": [
+                { name: "Dsus4", frets: [-1, -1, 0, 2, 3, 3], fingers: [-1, -1, 0, 1, 2, 3], baseFret: 1 }
+            ],
+            "F": [
+                { name: "F (Barré)", frets: [1, 3, 3, 2, 1, 1], fingers: [1, 3, 4, 2, 1, 1], baseFret: 1 }
+            ],
+            "E": [
+                { name: "E (Ouvert)", frets: [0, 2, 2, 1, 0, 0], fingers: [0, 2, 3, 1, 0, 0], baseFret: 1 }
+            ],
+            "Em": [
+                { name: "Em (Ouvert)", frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0], baseFret: 1 }
+            ],
+            "E7": [
+                { name: "E7 (Ouvert)", frets: [0, 2, 0, 1, 0, 0], fingers: [0, 2, 0, 1, 0, 0], baseFret: 1 }
+            ],
+            "Bb": [
+                { name: "Bb (Barré)", frets: [-1, 1, 3, 3, 3, 1], fingers: [-1, 1, 2, 3, 4, 1], baseFret: 1 }
+            ],
+            "Bbm": [
+                { name: "Bbm (Barré)", frets: [1, 1, 3, 3, 2, 1], fingers: [1, 1, 3, 4, 2, 1], baseFret: 1 }
+            ],
+            "Bb7": [
+                { name: "Bb7", frets: [-1, 1, 3, 1, 3, 1], fingers: [-1, 1, 3, 1, 4, 1], baseFret: 1 }
+            ],
+            "B": [
+                { name: "B (Barré)", frets: [-1, 2, 4, 4, 4, 2], fingers: [-1, 1, 3, 3, 3, 1], baseFret: 2 }
+            ],
+            "Bm": [
+                { name: "Bm (Barré)", frets: [2, 2, 4, 4, 3, 2], fingers: [1, 1, 3, 4, 2, 1], baseFret: 2 }
+            ],
+            "B7": [
+                { name: "B7", frets: [-1, 2, 1, 2, 0, 2], fingers: [-1, 2, 1, 3, 0, 4], baseFret: 1 }
+            ]
+        };
+
+        function generateBarreVariants(pc, suffix, label) {
+            const isMinor = /^(?:min|m(?!aj))/.test(suffix);
+            const q = isMinor ? (/^(?:min|m)7$/.test(suffix) ? 'm7' : 'm') : (suffix === '7' ? '7' : 'M');
+
+            const eOff = { 'M': [0, 2, 2, 1, 0, 0], 'm': [0, 2, 2, 0, 0, 0], '7': [0, 2, 0, 1, 0, 0], 'm7': [0, 2, 0, 0, 0, 0] };
+            const eFingBarre = { 'M': [1, 3, 4, 2, 1, 1], 'm': [1, 3, 4, 1, 1, 1], '7': [1, 3, 1, 2, 1, 1], 'm7': [1, 3, 1, 1, 1, 1] };
+            const eFingOpen = { 'M': [0, 2, 3, 1, 0, 0], 'm': [0, 2, 3, 0, 0, 0], '7': [0, 2, 0, 1, 0, 0], 'm7': [0, 2, 0, 0, 0, 0] };
+            const aOff = { 'M': [-1, 0, 2, 2, 2, 0], 'm': [-1, 0, 2, 2, 1, 0], '7': [-1, 0, 2, 0, 2, 0], 'm7': [-1, 0, 2, 0, 1, 0] };
+            const aFingBarre = { 'M': [-1, 1, 3, 3, 3, 1], 'm': [-1, 1, 3, 4, 2, 1], '7': [-1, 1, 3, 1, 4, 1], 'm7': [-1, 1, 3, 1, 2, 1] };
+            const aFingOpen = { 'M': [-1, 0, 1, 2, 3, 0], 'm': [-1, 0, 2, 3, 1, 0], '7': [-1, 0, 2, 0, 3, 0], 'm7': [-1, 0, 2, 0, 1, 0] };
+
+            const e = mod12(pc - 4);
+            const a = mod12(pc - 9);
+            const variants = [
+                {
+                    name: label + ' (forme Mi)',
+                    frets: eOff[q].map(f => f + e),
+                    fingers: e === 0 ? eFingOpen[q] : eFingBarre[q],
+                    baseFret: Math.max(1, e)
+                },
+                {
+                    name: label + ' (forme La)',
+                    frets: aOff[q].map(f => f === -1 ? -1 : f + a),
+                    fingers: a === 0 ? aFingOpen[q] : aFingBarre[q],
+                    baseFret: Math.max(1, a)
+                }
+            ];
+            variants.sort((x, y) => x.baseFret - y.baseFret);
+            return variants;
+        }
+
+        function getChordVariants(key) {
+            if (chordLibrary[key]) return chordLibrary[key];
+            const p = parseChordToken(key);
+            if (!p) return generateBarreVariants(0, '', key);
+            const root = letterPc(p.rl.length > 1 ? FR_MAP[p.rl] : p.rl, p.ra, false);
+            if (p.bl) {
+                const baseKey = noteName(root, false) + p.suffix;
+                if (chordLibrary[baseKey]) return chordLibrary[baseKey];
+                return generateBarreVariants(root, p.suffix, key);
+            }
+            return generateBarreVariants(root, p.suffix, key);
+        }
+
+        function getActiveChordData(key) {
+            const variants = getChordVariants(key);
+            const selectedIdx = chordVariantSelections[key] || 0;
+            return variants[selectedIdx] || variants[0];
+        }
+
+        function setChordVariant(key, variantIndex) {
+            chordVariantSelections[key] = variantIndex;
+            renderSongContent();
+        }
+
+        function variantLabel(variantName, display) {
+            const rest = variantName.replace(/^\S+/, '').trim();
+            return rest ? display + ' ' + rest : display;
+        }
+
+        function generateSVGContent(name, data) {
+            const width = 110;
+            const height = 130;
+            const startX = 20;
+            const startY = 28;
+            const stringSpacing = 12;
+            const fretSpacing = 18;
+            let svgElements = `<text x="${width/2}" y="16" font-family="Inter, sans-serif" font-size="11" font-weight="bold" fill="currentColor" text-anchor="middle">${esc(name)}</text>`;
+
+            if (data.baseFret > 1) {
+                svgElements += `<text x="8" y="${startY + fretSpacing}" font-size="9" font-weight="bold" fill="currentColor">${data.baseFret}fr</text>`;
+            }
+            if (data.baseFret === 1) {
+                svgElements += `<rect x="${startX}" y="${startY}" width="${5 * stringSpacing}" height="3.5" fill="currentColor" rx="1"/>`;
+            } else {
+                svgElements += `<line x1="${startX}" y1="${startY}" x2="${startX + 5 * stringSpacing}" y2="${startY}" stroke="currentColor" stroke-width="2"/>`;
+            }
+            for (let f = 1; f <= 4; f++) {
+                const y = startY + f * fretSpacing;
+                svgElements += `<line x1="${startX}" y1="${y}" x2="${startX + 5 * stringSpacing}" y2="${y}" stroke="currentColor" stroke-opacity="0.3" stroke-width="1"/>`;
+            }
+            for (let s = 0; s < 6; s++) {
+                const x = startX + s * stringSpacing;
+                svgElements += `<line x1="${x}" y1="${startY}" x2="${x}" y2="${startY + 4 * fretSpacing}" stroke="currentColor" stroke-opacity="0.4" stroke-width="1"/>`;
+            }
+            for (let s = 0; s < 6; s++) {
+                const x = startX + s * stringSpacing;
+                const fret = data.frets[s];
+                const finger = data.fingers[s];
+                if (fret === -1) {
+                    svgElements += `<text x="${x}" y="${startY - 4}" font-size="9" font-weight="bold" fill="currentColor" text-anchor="middle">×</text>`;
+                } else if (fret === 0) {
+                    svgElements += `<circle cx="${x}" cy="${startY - 4}" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`;
+                } else {
+                    const relFret = fret - (data.baseFret - 1);
+                    if (relFret > 0 && relFret <= 4) {
+                        const dotY = startY + (relFret - 0.5) * fretSpacing;
+                        svgElements += `<circle cx="${x}" cy="${dotY}" r="5" fill="#d97706"/>`;
+                        if (finger > 0) {
+                            svgElements += `<text x="${x}" y="${dotY + 3}" font-size="8" font-weight="bold" fill="#ffffff" text-anchor="middle">${finger}</text>`;
+                        }
+                    }
+                }
+            }
+            return `<svg width="${width}" height="${height}" class="text-slate-800 dark:text-slate-100">${svgElements}</svg>`;
+        }
+
+        function generateMiniSVG(display, key) {
+            return generateSVGContent(display, getActiveChordData(key));
+        }
+
+        function chordSpanHtml(info, tooltipClass) {
+            return `<span class="${tooltipClass}">${esc(info.display)}<span class="chord-tooltip">${generateMiniSVG(info.display, info.key)}</span></span>`;
+        }
+
+        function renderSongContent() {
+            if (!currentSong) return;
+            const czech = currentSong.czech;
+
+            const lines = currentSong.content.split('\n');
+            const processedLines = lines.map((rawLine, index) => {
+                const line = rawLine.replace(/\r$/, '');
+                const tooltipClass = index < 4 ? "chord-interactive tooltip-below" : "chord-interactive";
+
+                if (SECTION_RE.test(line)) {
+                    return `<span class="section-header">${esc(line)}</span>`;
+                }
+
+                if (isChordLine(line)) {
+                    return mapChordLine(line, tok => {
+                        const p = parseChordToken(tok);
+                        if (!p) return null;
+                        const info = chordInfo(p, czech, transpositionOffset);
+                        return {
+                            plain: p.pre + info.display + p.post,
+                            html: esc(p.pre) + chordSpanHtml(info, tooltipClass) + esc(p.post)
+                        };
+                    }, esc);
+                }
+
+                return mapBracketChords(line, {
+                    text: s => esc(s),
+                    chord: p => chordSpanHtml(chordInfo(p, czech, transpositionOffset), tooltipClass)
+                });
+            });
+
+            songContainer.innerHTML = `
+                <pre class="song-pre max-w-4xl mx-auto" style="font-size: ${currentFontSize}px;">${processedLines.join('\n')}</pre>
+            `;
+
+            renderChordDiagrams(extractAllChords(currentSong.content, czech, transpositionOffset));
+        }
+
+        function renderChordDiagrams(chords) {
+            chordCountEl.textContent = chords.length;
+            if (chords.length === 0) {
+                chordDiagramsContainer.innerHTML = `<div class="text-center py-16 text-slate-400 text-xs" style="grid-column: 1 / -1;">Aucun accord détecté.</div>`;
+                return;
+            }
+            chordDiagramsContainer.innerHTML = chords.map(({ key, display }) => {
+                const variants = getChordVariants(key);
+                const currentIdx = chordVariantSelections[key] || 0;
+                const activeData = variants[currentIdx] || variants[0];
+
+                let variantButtons = '';
+                if (variants.length > 1) {
+                    variantButtons = `
+                        <div class="variant-selector">
+                            <span class="text-[10px] font-bold px-1 text-slate-500">Variantes :</span>
+                            ${variants.map((v, idx) => `
+                                <button onclick="setChordVariant('${key}', ${idx})" class="text-left px-2 py-0.5 text-[10px] rounded hover:bg-amber-500 hover:text-white transition ${idx === currentIdx ? 'bg-amber-500 text-white font-bold' : 'text-slate-700 dark:text-slate-300'}">
+                                    ${esc(variantLabel(v.name, display))}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="chord-card bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex flex-col items-center shadow-sm">
+                        ${generateSVGContent(display, activeData)}
+                        ${variantButtons}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const ONLINE_INDEX_FILE = 'index.json';
+
+        const isLocalFile = (location.protocol === 'file:');
+        if (isLocalFile) {
+            onlineFolderBtn.disabled = true;
+            onlineFolderBtn.className = "flex items-center space-x-1.5 px-3.5 py-2 bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-not-allowed";
+            onlineFolderBtn.title = "Indisponible : la page est ouverte depuis un fichier local. Hébergez-la (ex: GitHub Pages) pour charger les chansons en ligne.";
+        }
+
+        function songLabel(song) {
+            return song.artist && song.artist !== "Artiste inconnu" ? `${song.title} – ${song.artist}` : song.title;
+        }
+
+        function refreshSongSelect() {
+            songSelect.innerHTML = songsDatabase.map((s, i) => `<option value="${i}">${esc(songLabel(s))}</option>`).join('');
+            songSelect.classList.toggle('hidden', songsDatabase.length < 2);
+        }
+
+        function setSongs(list) {
+            songsDatabase = list;
+            refreshSongSelect();
+            loadSong(songsDatabase[0]);
+        }
+
+        function selectSong(i) {
+            const idx = parseInt(i, 10);
+            const song = songsDatabase[idx];
+            if (!song) return;
+            if (currentSong && currentSong.content !== currentSong.savedContent &&
+                !confirm("Le texte de la chanson en cours a été modifié et n'est pas enregistré. Changer de chanson quand même ?")) {
+                songSelect.value = String(currentSong._dbIndex);
+                return;
+            }
+            loadSong(song);
+        }
+
+        async function listOnlineSongFiles() {
+            const res = await fetch(ONLINE_INDEX_FILE, { cache: 'no-store' });
+            if (res.ok) {
+                let data;
+                try { data = await res.json(); }
+                catch (e) { throw new Error(`Le fichier ${ONLINE_INDEX_FILE} n'est pas un JSON valide.`); }
+                const entries = Array.isArray(data) ? data : (data && Array.isArray(data.songs) ? data.songs : null);
+                if (!entries) throw new Error(`Le fichier ${ONLINE_INDEX_FILE} doit contenir une liste de noms de fichiers .txt.`);
+                const files = entries.map(e => typeof e === 'string' ? e : (e && e.file)).filter(f => typeof f === 'string' && f.trim());
+                if (files.length === 0) throw new Error(`La liste du fichier ${ONLINE_INDEX_FILE} est vide.`);
+                return files;
+            }
+
+            const host = location.hostname;
+            if (!/\.github\.io$/i.test(host)) {
+                throw new Error(`Fichier ${ONLINE_INDEX_FILE} introuvable (erreur ${res.status}).`);
+            }
+            const owner = host.replace(/\.github\.io$/i, '');
+            const segs = location.pathname.split('/').filter(Boolean);
+            if (segs.length && /\.[a-z0-9]+$/i.test(segs[segs.length - 1])) segs.pop();
+            const repo = segs.length ? segs[0] : host;
+            const sub = segs.slice(1).map(encodeURIComponent).join('/');
+            const api = `https://api.github.com/repos/${owner}/${repo}/contents${sub ? '/' + sub : ''}`;
+            const r = await fetch(api);
+            if (!r.ok) {
+                throw new Error(`Liste des chansons indisponible (GitHub : erreur ${r.status}).`);
+            }
+            const items = await r.json();
+            const files = (Array.isArray(items) ? items : [])
+                .filter(it => it.type === 'file' && /\.txt$/i.test(it.name))
+                .map(it => it.name)
+                .sort((x, y) => x.localeCompare(y, 'fr'));
+            if (files.length === 0) throw new Error("Aucun fichier .txt trouvé dans le dossier de la page.");
+            return files;
+        }
+
+        async function loadOnlineSongs() {
+            if (isLocalFile) return;
+            try {
+                const files = await listOnlineSongFiles();
+                const results = await Promise.allSettled(files.map(async (name) => {
+                    const r = await fetch(encodeURIComponent(name), { cache: 'no-store' });
+                    if (!r.ok) throw new Error(name);
+                    return parseSongText(name, await r.text());
+                }));
+                const songs = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+                const failed = results.filter(r => r.status === 'rejected').map(r => r.reason.message);
+
+                if (songs.length === 0) throw new Error("Aucune chanson n'a pu être chargée.");
+                setSongs(songs);
+                if (failed.length > 0) showAlert("Chansons introuvables", "Non chargées : " + failed.join(', '));
+            } catch (err) {
+                showAlert("Chargement en ligne impossible", err.message || String(err));
+            }
+        }
+
+        pickFolderBtn.addEventListener('click', async () => {
+            if (window.showDirectoryPicker) {
+                try {
+                    const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                    await loadFromDirectoryHandle(dirHandle);
+                } catch (err) {
+                    if (err.name !== 'AbortError') fallbackFileInput.click();
+                }
+            } else {
+                fallbackFileInput.click();
+            }
+        });
+
+        fallbackFileInput.addEventListener('change', async (e) => {
+            processFileList(Array.from(e.target.files));
+        });
+
+        window.addEventListener('dragover', e => e.preventDefault());
+        window.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files.length > 0) {
+                processFileList(Array.from(e.dataTransfer.files));
+            }
+        });
+
+        async function processFileList(files) {
+            const newSongs = [];
+            for (let file of files) {
+                if (file.name.endsWith('.txt')) {
+                    const text = await file.text();
+                    newSongs.push(parseSongText(file.name, text));
+                }
+            }
+            if (newSongs.length > 0) {
+                setSongs(newSongs);
+            }
+        }
+
+        async function loadFromDirectoryHandle(dirHandle) {
+            const newSongs = [];
+            for await (const entry of dirHandle.values()) {
+                if (entry.kind === 'file' && entry.name.endsWith('.txt')) {
+                    const file = await entry.getFile();
+                    const text = await file.text();
+                    const song = parseSongText(file.name, text);
+                    song.fileHandle = entry;
+                    newSongs.push(song);
+                }
+            }
+            if (newSongs.length > 0) {
+                setSongs(newSongs);
+            }
+        }
+
+        function parseSongText(filename, text) {
+            const baseName = filename.replace(/\.txt$/i, '');
+            let title = baseName;
+            let artist = "Artiste inconnu";
+            
+            // Reconnaissance de la séparation par tiret (-) entre le titre (avec des underscores pour les espaces) et l'artiste
+            if (baseName.includes('-')) {
+                const lastDashIdx = baseName.lastIndexOf('-');
+                const rawTitle = baseName.substring(0, lastDashIdx);
+                const rawArtist = baseName.substring(lastDashIdx + 1);
+                
+                title = rawTitle.replace(/_/g, ' ').trim();
+                artist = rawArtist.replace(/_/g, ' ').trim();
+            } else if (baseName.includes('_')) {
+                const parts = baseName.split('_');
+                title = parts[0].replace(/_/g, ' ').trim();
+                artist = parts[1] ? parts[1].replace(/_/g, ' ').trim() : "Artiste inconnu";
+            }
+            
+            return {
+                id: baseName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+                filename: filename,
+                title: title,
+                artist: artist,
+                content: text
+            };
+        }
+
+        function toggleSidebar() {
+            isSidebarVisible = !isSidebarVisible;
+            if (isSidebarVisible) {
+                sidebar.classList.remove('hidden');
+                sidebarBtnText.textContent = "Masquer accords";
+            } else {
+                sidebar.classList.add('hidden');
+                sidebarBtnText.textContent = "Afficher accords";
+            }
+        }
+
+        function setChordColumns(n) {
+            chordColumns = n;
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById('colBtn' + i).className = (i === n)
+                    ? "px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white"
+                    : "px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700";
+            }
+            chordDiagramsContainer.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
+            const widths = { 1: '11.5rem', 2: '20rem', 3: '28.5rem' };
+            sidebar.style.width = widths[n];
+        }
+
+        function transpose(delta) {
+            if (!currentSong) return;
+            transpositionOffset += delta;
+            transValEl.textContent = (transpositionOffset > 0 ? '+' : '') + transpositionOffset;
+            renderSongContent();
+        }
+
+        function changeFontSize(delta) {
+            currentFontSize = Math.max(12, Math.min(28, currentFontSize + delta));
+            if (currentSong) renderSongContent();
+        }
+
+        function loadSong(song) {
+            currentSong = Object.assign({}, song);
+            currentSong.savedContent = currentSong.content;
+            currentSong._dbIndex = songsDatabase.indexOf(song);
+            if (currentSong._dbIndex >= 0) songSelect.value = String(currentSong._dbIndex);
+            transpositionOffset = 0;
+            chordVariantSelections = {};
+            transValEl.textContent = '0';
+            songTitleEl.textContent = currentSong.title;
+            songArtistEl.textContent = currentSong.artist;
+
+            currentSong.czech = detectCzechNotation(currentSong.content);
+            setNotationSlider(currentSong.czech);
+            updateSaveButton();
+
+            renderSongContent();
+            songContainer.scrollTop = 0;
+        }
+
+        function toggleAutoScroll() {
+            if (!currentSong) { showAlert("Attention", "Veuillez d'abord sélectionner une chanson."); return; }
+            isAutoScrolling = !isAutoScrolling;
+            if (isAutoScrolling) {
+                scrollToggleBtn.className = "flex items-center space-x-1.5 px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-sm transition";
+                scrollBtnText.textContent = "Pause";
+                if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+                startScrolling();
+            } else { stopScrolling(); }
+        }
+
+        function startScrolling() {
+            if (autoScrollInterval) clearInterval(autoScrollInterval);
+            autoScrollInterval = setInterval(() => {
+                if (!isAutoScrolling) return;
+                songContainer.scrollBy({ top: parseFloat(scrollSpeedInput.value), behavior: 'smooth' });
+                if (songContainer.scrollTop + songContainer.clientHeight >= songContainer.scrollHeight - 5) toggleAutoScroll();
+            }, 120);
+        }
+
+        function stopScrolling() {
+            isAutoScrolling = false;
+            if (autoScrollInterval) clearInterval(autoScrollInterval);
+            scrollToggleBtn.className = "flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition";
+            scrollBtnText.textContent = "Défilement";
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        function showAlert(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('messageModal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('messageModal').classList.add('hidden'); }
+
+        songContainer.addEventListener('pointerdown', () => {
+            if (isAutoScrolling) stopScrolling();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) || '';
+            if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+            if (e.code === 'Space' || e.key === ' ') {
+                if (!currentSong) return;
+                e.preventDefault();
+                if (!e.repeat) toggleAutoScroll();
+            } else if (e.key === 'Enter') {
+                if (!currentSong) return;
+                e.preventDefault();
+                if (isAutoScrolling) {
+                    const min = parseFloat(scrollSpeedInput.min);
+                    const max = parseFloat(scrollSpeedInput.max);
+                    const step = parseFloat(scrollSpeedInput.step) || 0.5;
+                    let v = parseFloat(scrollSpeedInput.value) + step;
+                    if (v > max + 1e-9) v = min;
+                    scrollSpeedInput.value = v;
+                } else {
+                    songContainer.scrollTo({ top: 0, behavior: 'instant' });
+                }
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && e.target && e.target.tagName === 'BUTTON') e.preventDefault();
+        });
+
+        // Chargement direct du fichier par défaut Je_l'aime_à_mourir-Francis_Cabrel.txt présent dans le dépôt
+        window.onload = async () => {
+            setChordColumns(2);
+            try {
+                const defaultFileName = "Je_l'aime_à_mourir-Francis_Cabrel.txt";
+                const res = await fetch(encodeURIComponent(defaultFileName), { cache: 'no-store' });
+                if (res.ok) {
+                    const text = await res.text();
+                    const songObj = parseSongText(defaultFileName, text);
+                    setSongs([songObj]);
+                    return;
+                }
+            } catch (e) {
+                // Ignore et bascule sur le repli si besoin
+            }
+        };
+
+    </script>
+</body>
+</html>

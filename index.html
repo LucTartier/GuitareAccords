@@ -218,7 +218,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                     <p class="text-lg font-semibold font-sans mb-1">Aucune chanson sélectionnée</p>
-                    <p class="text-sm font-sans">Cliquez sur <b>"Ouvrir Dossier"</b> en bas pour charger vos morceaux.</p>
+                    <p class="text-sm font-sans mb-1">Cliquer sur <b>"Ouvrir Dossier"</b> ou <b>"En ligne"</b> ou coller votre fichier.txt.</p>
+                    <p class="text-sm font-sans mb-1"><b>"Espace"</b> pour défiler/arrêter et <b>"Entrée"</b> pour accélérer.</p>
+                    <p class="text-sm font-sans"><a href="index.html" download="Songbook_Guitare.html" class="text-amber-600 dark:text-amber-400 underline hover:text-amber-700 dark:hover:text-amber-300">Cliquer ce lien pour télécharger Songbook Guitare.</a></p>
                 </div>
             </div>
 
@@ -366,11 +368,11 @@
         }
 
         const NOTE_EN = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-        const FR_MAP = { DO: 'C', RE: 'D', MI: 'E', FA: 'F', SOL: 'G', LA: 'A', SI: 'B' };
+        const FR_MAP = { DO: 'C', RE: 'D', 'RÉ': 'D', MI: 'E', FA: 'F', SOL: 'G', LA: 'A', SI: 'B' };
         const SECTION_RE = /^\s*\[(Chorus|Verse|Intro|Outro|Bridge|Strophe|Refrain|Instrumental)\]/i;
         const TAB_RE = /^\s*[eBGDAE]\|/;
 
-        const ROOT_PART = '(SOL|DO|RE|MI|FA|LA|SI|[A-H])([#b]?)';
+        const ROOT_PART = '(SOL|DO|RÉ|RE|MI|FA|LA|SI|[A-H])([#b]?)';
         const SUFFIX_PART = '((?:maj|min|dim|aug|sus[24]?|add[0-9]*|m|M|[0-9]{1,2}|[#b+\\-]|\\([^)]*\\))*)';
         const CHORD_RE = new RegExp('^' + ROOT_PART + SUFFIX_PART + '(?:\\/' + ROOT_PART + ')?$', 'i');
 

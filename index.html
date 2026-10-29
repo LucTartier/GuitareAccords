@@ -1315,21 +1315,9 @@
             if (e.code === 'Space' && e.target && e.target.tagName === 'BUTTON') e.preventDefault();
         });
 
-        // Chargement direct du fichier par défaut Je_l'aime_à_mourir-Francis_Cabrel.txt présent dans le dépôt
-        window.onload = async () => {
+        // Initialisation de base sans chargement automatique d'une chanson
+        window.onload = () => {
             setChordColumns(2);
-            try {
-                const defaultFileName = "Je_l'aime_à_mourir-Francis_Cabrel.txt";
-                const res = await fetch(encodeURIComponent(defaultFileName), { cache: 'no-store' });
-                if (res.ok) {
-                    const text = await res.text();
-                    const songObj = parseSongText(defaultFileName, text);
-                    setSongs([songObj]);
-                    return;
-                }
-            } catch (e) {
-                // Ignore et bascule sur le repli si besoin
-            }
         };
 
     </script>

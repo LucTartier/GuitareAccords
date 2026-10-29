@@ -136,8 +136,8 @@
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200 flex flex-col overflow-hidden">
 
     <!-- Header Navigation -->
-    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 py-2 sm:px-6 sm:py-3 shrink-0 shadow-sm flex flex-col gap-2">
-        <div class="flex items-center justify-between flex-wrap gap-x-4 gap-y-2">
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 py-2 sm:px-6 sm:py-3 shrink-0 shadow-sm flex flex-wrap items-center gap-x-2 gap-y-2">
+        <div class="contents">
             <div class="flex items-center space-x-3 min-w-0">
                 <div class="bg-amber-500 text-white p-2 rounded-xl shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,11 +147,12 @@
                 <div class="min-w-0">
                     <h1 id="songTitle" class="text-lg font-bold tracking-tight truncate">Songbook Guitare</h1>
                     <p id="songArtist" class="text-xs text-slate-500 dark:text-slate-400 truncate">Artiste inconnu</p>
+                    <select id="songSelect" onchange="selectSong(this.value)" class="hidden w-40 sm:w-64 max-w-full text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer" title="Choisir une chanson"></select>
                 </div>
             </div>
             <!-- Notation glissante B / Si / H -->
-            <div class="flex items-center space-x-2 select-none">
-                <span class="text-xs text-slate-500">Notation :</span>
+            <div class="flex items-center select-none">
+                <span class="hidden sm:inline mr-2 text-xs text-slate-500">Notation :</span>
                 <div class="inline-flex items-center bg-slate-100 dark:bg-slate-700 p-0.5 rounded-full text-xs font-bold cursor-pointer relative">
                     <span id="labelB" onclick="selectNotation('en')" class="px-2.5 py-0.5 z-10 text-amber-600 dark:text-amber-400 transition-colors">B</span>
                     <span id="labelSi" onclick="selectNotation('fr')" class="px-2.5 py-0.5 z-10 text-slate-500 transition-colors">Si</span>
@@ -162,8 +163,7 @@
         </div>
 
         <!-- Contrôles de lecture (remontés en haut, compacts pour petits écrans) -->
-        <div class="flex items-center flex-wrap gap-2">
-            <select id="songSelect" onchange="selectSong(this.value)" class="hidden max-w-[14rem] text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer" title="Choisir une chanson"></select>
+        <div class="contents">
 
             <button id="saveBtn" onclick="saveCurrentSong()" class="hidden items-center justify-center p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm transition" title="Enregistrer le texte modifié">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -173,10 +173,10 @@
                 </svg>
             </button>
 
-            <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl" title="Transposer (demi-tons)">
-                <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300">#/b</span>
+            <div class="flex items-center bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl" title="Transposer (demi-tons)">
+                <span class="text-xs font-semibold pl-2 pr-0 text-slate-600 dark:text-slate-300">#/b</span>
                 <button onclick="transpose(-1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">-</button>
-                <span id="transpositionValue" class="text-xs font-mono font-bold w-6 text-center">0</span>
+                <span id="transpositionValue" class="text-xs font-mono font-bold min-w-[1.5rem] px-0 text-center">0</span>
                 <button onclick="transpose(1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-600 rounded-lg shadow-sm font-bold transition">+</button>
             </div>
 
@@ -190,11 +190,8 @@
                 <input type="range" id="scrollSpeed" min="0.5" max="4" step="0.5" value="1" class="w-20 accent-amber-500 cursor-pointer">
             </div>
 
-            <button id="scrollToggle" onclick="toggleAutoScroll()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition">
-                <svg id="scrollIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                </svg>
-                <span id="scrollBtnText">Défilement</span>
+            <button id="scrollToggle" onclick="toggleAutoScroll()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition" title="Défilement" aria-label="Défilement">
+                <svg id="scrollIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             </button>
         </div>
     </header>
@@ -321,7 +318,9 @@
         const chordDiagramsContainer = document.getElementById('chordDiagramsContainer');
         const scrollSpeedInput = document.getElementById('scrollSpeed');
         const scrollToggleBtn = document.getElementById('scrollToggle');
-        const scrollBtnText = document.getElementById('scrollBtnText');
+        const scrollIcon = document.getElementById('scrollIcon');
+        const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
+        const ICON_PAUSE = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
         const pickFolderBtn = document.getElementById('pickFolderBtn');
         const fallbackFileInput = document.getElementById('fallbackFileInput');
         const sidebar = document.getElementById('sidebar');
@@ -902,7 +901,10 @@
 
         function refreshSongSelect() {
             songSelect.innerHTML = songsDatabase.map((s, i) => `<option value="${i}">${esc(songLabel(s))}</option>`).join('');
-            songSelect.classList.toggle('hidden', songsDatabase.length < 2);
+            const multi = songsDatabase.length >= 2;
+            songSelect.classList.toggle('hidden', !multi);
+            songTitleEl.classList.toggle('hidden', multi);
+            songArtistEl.classList.toggle('hidden', multi);
         }
 
         function setSongs(list) {
@@ -1156,7 +1158,9 @@
             isAutoScrolling = !isAutoScrolling;
             if (isAutoScrolling) {
                 scrollToggleBtn.className = "flex items-center space-x-1.5 px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-sm transition";
-                scrollBtnText.textContent = "Pause";
+                scrollIcon.innerHTML = ICON_PAUSE;
+                scrollToggleBtn.title = "Pause";
+                scrollToggleBtn.setAttribute("aria-label", "Pause");
                 if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
                 startScrolling();
             } else { stopScrolling(); }
@@ -1175,7 +1179,9 @@
             isAutoScrolling = false;
             if (autoScrollInterval) clearInterval(autoScrollInterval);
             scrollToggleBtn.className = "flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition";
-            scrollBtnText.textContent = "Défilement";
+            scrollIcon.innerHTML = ICON_PLAY;
+            scrollToggleBtn.title = "Défilement";
+            scrollToggleBtn.setAttribute("aria-label", "Défilement");
         }
 
         document.getElementById('themeToggle').addEventListener('click', () => document.documentElement.classList.toggle('dark'));

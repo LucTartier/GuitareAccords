@@ -1284,17 +1284,28 @@
         }
 
         function startScrolling() {
-            if (autoScrollInterval) clearInterval(autoScrollInterval);
-            autoScrollInterval = setInterval(() => {
+            if (autoScrollInterval) cancelAnimationFrame(autoScrollInterval);
+            // Défilement fluide : une mise à jour par image affichée, vitesse indépendante de la fréquence d'écran
+            // (même vitesse qu'avant : "valeur" px toutes les 120 ms). La position est gardée en décimal pour ne pas perdre les fractions de pixel.
+            let pos = songContainer.scrollTop;
+            let last = null;
+            const step = (ts) => {
                 if (!isAutoScrolling) return;
-                songContainer.scrollTop += parseFloat(scrollSpeedInput.value);
-                if (songContainer.scrollTop + songContainer.clientHeight >= songContainer.scrollHeight - 5) toggleAutoScroll();
-            }, 120);
+                if (last === null) last = ts;
+                const dt = Math.min(ts - last, 100);
+                last = ts;
+                if (Math.abs(songContainer.scrollTop - pos) > 2) pos = songContainer.scrollTop;
+                pos += parseFloat(scrollSpeedInput.value) * dt / 120;
+                songContainer.scrollTop = pos;
+                if (songContainer.scrollTop + songContainer.clientHeight >= songContainer.scrollHeight - 5) { toggleAutoScroll(); return; }
+                autoScrollInterval = requestAnimationFrame(step);
+            };
+            autoScrollInterval = requestAnimationFrame(step);
         }
 
         function stopScrolling() {
             isAutoScrolling = false;
-            if (autoScrollInterval) clearInterval(autoScrollInterval);
+            if (autoScrollInterval) cancelAnimationFrame(autoScrollInterval);
             scrollToggleBtn.className = "flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition";
             scrollIcon.innerHTML = ICON_PLAY;
             speedBlock.classList.remove('speed-hidden');
